@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+	<!-- 使用txManager必须加上xmlns:tx以及关于tx的schema -->
+
+	<!-- 开启注解 -->
+	<context:annotation-config />
+	<context:component-scan
+		base-package="cn.it.shop.." />
+
+	<!-- 所有的properties文件应该交给Spring管理，而且在启动的时候加载 Spring支持两种方式，property-placeholder仅仅在xml中使用，即在beans.xml中获取properties文件中的对应的value -->
+	<!-- <context:property-placeholder location="classpath:conn.properties"/> -->
+	<!-- 与下面的配置等价，下面的更容易理解 -->
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<array>
+				<value>classpath:conn.properties</value>
+			</array>
+		</property>
+	</bean>
+
+	<!-- 第二种方式是使用注解的方式注入，主要用在java代码中使用注解注入properties文件中相应的value值 -->
+	<bean id="prop"
+		class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="locations">
+			<array>
+				<value>classpath:public.properties</value>
+				<value>classpath:pay.properties</value>
+			</array>
+		</property>
+	</bean>
+	
+	<!-- 注入连接池 -->
+	<!-- com.mchange.v2.c3p0.ComboPooledDataSource类在c3p0-0.9.5.1.jar包的com.mchange.v2.c3p0包中 -->
+	<bean id="dataSource" class="${dataSource}">
+		<property name="driverClass" value="${driverClass}" />
+		<property name="jdbcUrl" value="${jdbcUrl}" />
+		<property name="user" value="${user}" />
+		<property name="password" value="${password}" />
+	</bean>
+	
+	<!-- 配置sessionFactory -->
+	<!-- org.springframework.orm.hibernate4.LocalSessionFactoryBean类在spring-orm-4.2.4.RELEASE.jar包的org.springframework.orm.hibernate4包中 -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation"
+			value="classpath:hibernate.cfg.xml" /> <!-- 加载hibernate配置文件 -->
+	</bean>
+	
+	<!-- 配置事务管理器 -->
+	<!-- org.springframework.orm.hibernate4.HibernateTransactionManager类spring-orm-4.2.4.RELEASE.jar包的org.springframework.orm.hibernate4包中 -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	
+	<!-- 配置通知 -->
+	<tx:advice id="advice"
+		transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="*" propagation="SUPPORTS" />
+		</tx:attributes>
+	</tx:advice>
+	
+	<!-- 配置AOP切面 -->
+	<aop:config>
+		<!-- 配置哪些包的类要切入事务 -->
+		<aop:pointcut id="pointcut"
+			expression="execution(* cn.it.shop.service.impl.*.*(..))" />
+		<aop:advisor advice-ref="advice" pointcut-ref="pointcut" /><!-- 
+			连接了上面的advice和上面的pointcut -->
+		<!-- 出现一个很奇怪的问题，aop:pointcut要写在aop:advisor上面，否则会报错 -->
+	</aop:config>
+
+</beans>

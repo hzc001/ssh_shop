@@ -1,0 +1,20 @@
+#MyEclipse Hibernate Properties
+#Fri Apr 17 08:12:29 CST 2020
+reStrategyClass=
+detectM2M=false
+createConfigFile=true
+reSettingsFile=
+profile=
+keyGenerator=native
+genAnnotations=true
+detectO2O=false
+useJavaTypes=true
+sessionFactoryId=
+jndiPath=
+springDaoFile=
+basePersistenceClass=
+configFile=/shop_test/src/hibernate.cfg.xml
+daoSFId=
+sessionFactoryName=cn.it.shop.utils.HibernateSessionFactory
+genBasicCompId=true
+genVersionTag=false
